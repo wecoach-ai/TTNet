@@ -1,0 +1,55 @@
+name: "MR Pipeline"
+
+on:
+  pull_request:
+    paths:
+      - "**/*.py"
+      - ".github/workflows/*.yml"
+      - "poetry.lock"
+      - "pyproject.toml"
+
+jobs:
+  lint:
+    name: "Lint"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: sh
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.1.7
+      - name: Install poetry
+        run: pipx install poetry
+      - name: Setup Python
+        uses: actions/setup-python@v5.1.1
+        with:
+          python-version-file: "pyproject.toml"
+          cache: "poetry"
+      - name: Install dependencies
+        run: poetry install --with dev
+      - name: Run ruff linter
+        run: poetry run ruff check
+      - name: Run ruff formatter
+        run: poetry run ruff format --check
+  type:
+    name: "Type-Check"
+    runs-on: ubuntu-latest
+    needs:
+      - lint
+    defaults:
+      run:
+        shell: sh
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.1.7
+      - name: Install poetry
+        run: pipx install poetry
+      - name: Setup Python
+        uses: actions/setup-python@v5.1.1
+        with:
+          python-version-file: "pyproject.toml"
+          cache: "poetry"
+      - name: Install dependencies
+        run: poetry install --with dev
+      - name: Run mypy
+        run: poetry run mypy

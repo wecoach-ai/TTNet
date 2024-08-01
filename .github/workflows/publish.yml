@@ -1,0 +1,30 @@
+name: "Release Pipeline"
+
+on:
+  push:
+    tags:
+      - "*"
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: sh
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install poetry
+        run: pipx install poetry
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: "pyproject.toml"
+          cache: "poetry"
+      - name: Install dependencies
+        run: poetry install --with dev
+      - name: Build packages
+        run: poetry build
+      - name: Upload to test pypi
+        run: poetry publish --username ${{ secrets.PYPI_USERNAME }} --password ${{ secrets.PYPI_PASSWORD }}
