@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "ttnet"
+name = "pyttnet"
 version = "0.0.1"
 description = "Updated implementation of https://arxiv.org/pdf/2004.09927.pdf"
 authors = ["onlinejudge95 <onlinejudge95@gmail.com>"]
