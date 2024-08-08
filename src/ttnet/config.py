@@ -66,7 +66,7 @@ def generate_config(params: CLIParams) -> Config:
         input_frame_size=(320, 128),
         tasks=tasks,
         tasks_loss_weight=[loss_weights[task] for task in tasks],
-        freeze_modules_list=[value for key, value in freeze_modules.items() if params[key]],
+        freeze_modules_list=[value for key, value in freeze_modules.items() if params[key]],  # type: ignore
         checkpoints_dir=checkpoints_dir,
         logs_dir=logs_dir,
         saved_weight_file_name=saved_weight_file_name,
