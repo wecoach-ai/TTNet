@@ -1,10 +1,13 @@
 import pathlib
 import typing
 
+import torch
+
 
 class CLIParams(typing.TypedDict):
     seed: int
     saved_function: str
+    number_frame_sequence: int
     model_arch: str
     drop_prob: float
     multitask_learning: bool
@@ -13,6 +16,7 @@ class CLIParams(typing.TypedDict):
     segmentation: bool
     pretrained_path: pathlib.Path
     overwrite: bool
+    dataset_dir: pathlib.Path
     working_dir: pathlib.Path
     validation: bool
     testing: bool
@@ -63,3 +67,23 @@ class CLIParams(typing.TypedDict):
     output_format: str
     show_image: bool
     save_demo_output: bool
+
+
+class Config(CLIParams):
+    device: torch.device
+    number_gpu_per_node: int
+    pin_memory: bool
+    events_dict: dict[str, int]
+    events_weights_loss: tuple[float, float]
+    number_events: int
+    original_frame_size: tuple[int, int]
+    input_frame_size: tuple[int, int]
+    tasks: set[str]
+    tasks_loss_weight: list[float]
+    freeze_modules_list: list[str]
+    checkpoints_dir: pathlib.Path
+    logs_dir: pathlib.Path
+    saved_weight_file_name: pathlib.Path
+    results_dir: pathlib.Path
+    test_output_dir: pathlib.Path | None
+    demo_output_dir: pathlib.Path | None
