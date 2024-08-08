@@ -1,10 +1,12 @@
 import pathlib
 import typing
 
-from click import echo, group, option, Choice
+import torch
+from click import group, option, Choice
 from click_option_group import optgroup
 
 from .config import generate_config
+from .scheduler import trigger_training
 from .types import CLIParams, Config
 
 
@@ -14,7 +16,7 @@ def cli() -> None:
 
 
 @cli.command()
-@option("--seed", type=int, default=2020, show_default=True, help="Seed for reproducing the result")
+@option("--seed", type=int, default=2024, show_default=True, help="Seed for reproducing the result")
 @option(
     "--saved-function",
     type=str,
@@ -290,4 +292,9 @@ def train(**params: typing.Unpack[CLIParams]) -> None:
     Comamnd for training the ttnet model
     """
     config: Config = generate_config(params)
-    echo(f"{config=}")
+
+    if config["multiprocessing"]:
+        torch.multiprocessing.spawn(trigger_training, nprocs=config["number_gpu_per_node"], args=(config,))  # type: ignore
+        return
+
+    trigger_training(config)

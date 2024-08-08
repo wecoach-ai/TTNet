@@ -1,7 +1,9 @@
 import pathlib
+import random
+import warnings
 
-from torch import device
-from torch.cuda import device_count
+import numpy as np
+import torch
 
 from .types import CLIParams, Config
 
@@ -54,10 +56,18 @@ def generate_config(params: CLIParams) -> Config:
         demo_output_dir = results_dir / "demo" / params["saved_function"]
         demo_output_dir.mkdir(parents=True, exist_ok=True)
 
+    seed_model(params["seed"])
+
+    if params["gpu_idx"]:
+        warnings.warn("You have chosen a specific GPU. This will completely disable data parallelism.")
+
+    if params["multiprocessing"]:
+        params["world_size"] *= torch.cuda.device_count()
+
     return Config(
         **params,
-        device=device("cuda" if params["cuda"] else "cpu"),
-        number_gpu_per_node=device_count(),
+        device=torch.device("cuda" if params["cuda"] else "cpu"),
+        number_gpu_per_node=torch.cuda.device_count(),
         pin_memory=True,
         events_dict={"bounce": 0, "net": 1, "empty_event": 2},
         events_weights_loss=(1.0, 3.0),
@@ -73,4 +83,14 @@ def generate_config(params: CLIParams) -> Config:
         results_dir=results_dir,
         test_output_dir=test_output_dir,
         demo_output_dir=demo_output_dir,
+        distributed=params["world_size"] > 1 or params["multiprocessing"],
     )
+
+
+def seed_model(seed: int) -> None:
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
