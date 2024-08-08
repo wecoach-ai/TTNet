@@ -10,9 +10,10 @@ packages = [{include = "src/ttnet"}]
 ttnet = "src.ttnet.entrypoint:cli"
 
 [tool.poetry.dependencies]
-python = "3.11.9"
+python = "3.12.4"
 click = "8.1.7"
 click-option-group = "0.5.6"
+torch = { version = "2.4.0", source = "pytorch-cpu" }
 
 [tool.poetry.group.dev.dependencies]
 ruff = "0.5.5"
@@ -20,6 +21,11 @@ mypy = {extras = ["reports"], version = "1.11.1"}
 pytest = "8.3.2"
 pytest-cov = "5.0.0"
 pytest-mock = "3.14.0"
+
+[[tool.poetry.source]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+priority = "explicit"
 
 [build-system]
 requires = ["poetry-core"]

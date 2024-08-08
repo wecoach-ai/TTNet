@@ -5,7 +5,7 @@ from click import echo, group, option, Choice
 from click_option_group import optgroup
 
 from .config import generate_config
-from .types import CLIParams
+from .types import CLIParams, Config
 
 
 @group()
@@ -21,6 +21,13 @@ def cli() -> None:
     default="ttnet",
     show_default=True,
     help="Name used for saving logs, model state etc..",
+)
+@option(
+    "--number-frame-sequence",
+    type=int,
+    default=9,
+    show_default=True,
+    help="Number of frames extracted for a particular event",
 )
 @optgroup.group("Model Configuration")
 @optgroup.option("--model-arch", type=str, default="ttnet", show_default=True, help="Name of the model architecture")
@@ -53,7 +60,10 @@ def cli() -> None:
 )
 @optgroup.group("Dataloader And Running Configuration")
 @optgroup.option(
-    "--working-dir", type=pathlib.Path, default=pathlib.Path.cwd(), show_default=True, help="Root working directory"
+    "--dataset-dir", type=pathlib.Path, default=pathlib.Path.cwd(), show_default=True, help="Dataset directory path"
+)
+@optgroup.option(
+    "--working-dir", type=pathlib.Path, default=pathlib.Path.cwd(), show_default=True, help="Working directory path"
 )
 @optgroup.option(
     "--validation/--no-validation",
@@ -279,5 +289,5 @@ def train(**params: typing.Unpack[CLIParams]) -> None:
     """
     Comamnd for training the ttnet model
     """
-    config = generate_config(params)
+    config: Config = generate_config(params)
     echo(f"{config=}")
