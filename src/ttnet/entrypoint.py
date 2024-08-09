@@ -1,10 +1,13 @@
+import logging
 import pathlib
 import typing
 
-from click import echo, group, option, Choice
+import torch
+from click import group, option, Choice
 from click_option_group import optgroup
 
-from .config import generate_config
+from .config import init_config
+from .scheduler import trigger_training
 from .types import CLIParams, Config
 
 
@@ -14,7 +17,7 @@ def cli() -> None:
 
 
 @cli.command()
-@option("--seed", type=int, default=2020, show_default=True, help="Seed for reproducing the result")
+@option("--seed", type=int, default=2024, show_default=True, help="Seed for reproducing the result")
 @option(
     "--saved-function",
     type=str,
@@ -230,7 +233,7 @@ def cli() -> None:
     help="URL used to set up distributed training",
 )
 @optgroup.option("--dist-backend", type=str, default="nccl", show_default=True, help="Distributed backend")
-@optgroup.option("--gpu-idx", type=int, default=0, show_default=True, help="GPU index to use")
+@optgroup.option("--gpu-idx", type=int, default=-1, show_default=True, help="GPU index to use")
 @optgroup.option("--cuda/--no-cuda", default=False, show_default=True, help="If true, cuda is used")
 @optgroup.option(
     "--multiprocessing/--no-multiprocessing",
@@ -289,5 +292,18 @@ def train(**params: typing.Unpack[CLIParams]) -> None:
     """
     Comamnd for training the ttnet model
     """
-    config: Config = generate_config(params)
-    echo(f"{config=}")
+    conf: Config = init_config(params)
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s: %(module)s.py - %(funcName)s(), at Line %(lineno)d:%(levelname)s:\n%(message)s",
+        handlers=[
+            logging.StreamHandler(),
+            logging.FileHandler(conf["logs_dir"] / f"logger_{conf['saved_function']}.log"),
+        ],
+    )
+
+    if conf["multiprocessing"]:
+        torch.multiprocessing.spawn(trigger_training, nprocs=conf["number_gpu_per_node"], args=(conf,))  # type: ignore
+        return
+
+    trigger_training(conf)

@@ -87,3 +87,4 @@ class Config(CLIParams):
     results_dir: pathlib.Path
     test_output_dir: pathlib.Path | None
     demo_output_dir: pathlib.Path | None
+    distributed: bool
