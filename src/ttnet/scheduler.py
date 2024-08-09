@@ -3,6 +3,7 @@ import logging
 import torch
 from torch.utils.tensorboard import SummaryWriter
 
+from .model.factory import model_factory
 from .types import Config
 
 
@@ -26,7 +27,8 @@ def trigger_training(conf: Config) -> None:
         writer = SummaryWriter(log_dir=conf["logs_dir"] / "tensorboard")  # type: ignore
 
     try:
-        pass
+        model = model_factory(conf)
+        logging.info(model)
     except Exception:
         pass
     finally:
