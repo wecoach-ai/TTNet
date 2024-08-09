@@ -1,4 +1,5 @@
 import logging
+import typing
 
 from ..types import Config
 from .ttnet import TTNet
@@ -7,14 +8,14 @@ from .unbalance_loss import UnbalanceLoss
 
 
 def model_factory(conf: Config) -> MultiTaskLearning | UnbalanceLoss:
-    base_model_dict = {"ttnet": TTNet}
-    base_model_class = base_model_dict.get(conf["model_arch"])
+    base_model_dict: dict[str, typing.Type[TTNet]] = {"ttnet": TTNet}
+    base_model_class: typing.Type[TTNet] | None = base_model_dict.get(conf["model_arch"])
 
     if not base_model_class:
         logging.error("Model architecture not supported")
         raise NotImplementedError("Requested model architecture is not supported")
 
-    base_model = base_model_class(
+    base_model: TTNet = base_model_class(
         conf["drop_prob"],
         conf["tasks"],
         conf["input_frame_size"],
