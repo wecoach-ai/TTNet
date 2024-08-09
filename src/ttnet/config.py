@@ -8,7 +8,10 @@ import torch
 from .types import CLIParams, Config
 
 
-def generate_config(params: CLIParams) -> Config:
+def init_config(params: CLIParams) -> Config:
+    device: torch.device = torch.device("cuda" if params["cuda"] else "cpu")
+    number_gpu_per_node: int = torch.cuda.device_count()
+
     tasks: set[str] = {"global", "local", "event", "segmentation"}
     if not params["local"]:
         tasks.discard("local")
@@ -58,16 +61,21 @@ def generate_config(params: CLIParams) -> Config:
 
     seed_model(params["seed"])
 
-    if params["gpu_idx"]:
+    if params["gpu_idx"] >= 0:
         warnings.warn("You have chosen a specific GPU. This will completely disable data parallelism.")
+        device = torch.device(f"cuda:{params['gpu_idx']}")
 
     if params["multiprocessing"]:
         params["world_size"] *= torch.cuda.device_count()
 
+    is_distributed = params["world_size"] > 1 or params["multiprocessing"]
+    if is_distributed and params["multiprocessing"]:
+        params["rank"] = params["rank"] * number_gpu_per_node + params["gpu_idx"]
+
     return Config(
         **params,
-        device=torch.device("cuda" if params["cuda"] else "cpu"),
-        number_gpu_per_node=torch.cuda.device_count(),
+        device=device,
+        number_gpu_per_node=number_gpu_per_node,
         pin_memory=True,
         events_dict={"bounce": 0, "net": 1, "empty_event": 2},
         events_weights_loss=(1.0, 3.0),
@@ -83,7 +91,7 @@ def generate_config(params: CLIParams) -> Config:
         results_dir=results_dir,
         test_output_dir=test_output_dir,
         demo_output_dir=demo_output_dir,
-        distributed=params["world_size"] > 1 or params["multiprocessing"],
+        distributed=is_distributed,
     )
 
 

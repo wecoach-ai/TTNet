@@ -163,3 +163,5 @@ cython_debug/
 
 reports/
 .python-version
+logs/
+checkpoints/
