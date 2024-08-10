@@ -15,10 +15,12 @@ class ConvolutionBlock(nn.Module):
             self.max_pooling = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        if self.pooling:
-            return self.max_pooling(self.relu(self.batch_normalization(self.convolution(x))))
+        x = self.relu(self.batch_normalization(self.convolution(x)))
 
-        return self.relu(self.batch_normalization(self.convolution(x)))
+        if self.pooling:
+            return self.max_pooling(x)
+
+        return x
 
 
 class DeconvolutionBlock(nn.Module):
@@ -133,18 +135,17 @@ class Segmentation(nn.Module):
         self, out_block2: torch.Tensor, out_block3: torch.Tensor, out_block4: torch.Tensor, out_block5: torch.Tensor
     ) -> torch.Tensor:
         x = self.deconvolution_block_5(out_block5)
-        x = x + out_block4
+        x += out_block4
+
         x = self.deconvolution_block_4(x)
-        x = x + out_block3
+        x += out_block3
+
         x = self.deconvolution_block_3(x)
+        x += out_block2
 
-        x = x + out_block2
         x = self.deconvolution_block_2(x)
-
         x = self.relu(self.convolution_transposed(x))
-
         x = self.relu(self.convolution_block_1(x))
-
         out = self.sigmoid(self.convolution_block_2(x))
 
         return out
@@ -205,7 +206,7 @@ class TTNet(nn.Module):
 
     def crop(
         self, resize_batch_input: torch.Tensor, pred_ball_global: torch.Tensor
-    ) -> tuple[torch.Tensor, list[tuple[bool, int, int, int, int, int, int]]]:
+    ) -> tuple[torch.Tensor, list[list[bool, int, int, int, int, int, int]]]:
         original_height, original_width = 1080, 1920
         height_ratio = original_height / self.resize_height
         width_ratio = original_width / self.resize_width
@@ -275,7 +276,7 @@ class TTNet(nn.Module):
     def get_groundtruth_local_ball_coordinates(
         self,
         org_ball_position_coordinates: torch.Tensor,
-        cropped_params: list[tuple[bool, int, int, int, int, int, int]],
+        cropped_params: list[list[bool, int, int, int, int, int, int]],
     ) -> torch.Tensor:
         local_ball_position_coordinates = torch.zeros_like(org_ball_position_coordinates)
 
