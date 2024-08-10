@@ -176,7 +176,7 @@ class TTNet(nn.Module):
 
     def forward(
         self, resize_batch_input: torch.Tensor, org_ball_position_coordinates: torch.Tensor
-    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor | None, torch.Tensor | None, torch.Tensor | None, torch.Tensor | None]:
         pred_ball_local, pred_events, pred_seg, local_ball_position_coordinates = None, None, None, None
         pred_ball_global, global_features, out_block2, out_block3, out_block4, out_block5 = self.ball_global_stage(
             self.normalize(resize_batch_input)
@@ -206,7 +206,7 @@ class TTNet(nn.Module):
 
     def crop(
         self, resize_batch_input: torch.Tensor, pred_ball_global: torch.Tensor
-    ) -> tuple[torch.Tensor, list[list[bool, int, int, int, int, int, int]]]:
+    ) -> tuple[torch.Tensor, list[list[bool | int]]]:
         original_height, original_width = 1080, 1920
         height_ratio = original_height / self.resize_height
         width_ratio = original_width / self.resize_width
@@ -224,16 +224,13 @@ class TTNet(nn.Module):
             pred_ball_position_y = pred_ball_global_mask[index, self.resize_width :]
 
             if (torch.sum(pred_ball_position_x) == 0.0) or (torch.sum(pred_ball_position_y) == 0.0):
-                x_center = self.resize_width // 2
-                y_center = self.resize_height // 2
+                x_center = int((self.resize_width // 2) * width_ratio)
+                y_center = int((self.resize_height // 2) * height_ratio)
                 is_ball_detected = False
             else:
-                x_center = torch.argmax(pred_ball_position_x)
-                y_center = torch.argmax(pred_ball_position_y)
+                x_center = int(torch.argmax(pred_ball_position_x) * width_ratio)
+                y_center = int(torch.argmax(pred_ball_position_y) * height_ratio)
                 is_ball_detected = True
-
-            x_center = int(x_center * width_ratio)
-            y_center = int(y_center * height_ratio)
 
             x_min, x_max, y_min, y_max = self.get_crop_params(
                 x_center, y_center, self.resize_width, self.resize_height, original_width, original_height
@@ -274,9 +271,7 @@ class TTNet(nn.Module):
         return x_min, x_max, y_min, y_max
 
     def get_groundtruth_local_ball_coordinates(
-        self,
-        org_ball_position_coordinates: torch.Tensor,
-        cropped_params: list[list[bool, int, int, int, int, int, int]],
+        self, org_ball_position_coordinates: torch.Tensor, cropped_params: list[list[bool | int]]
     ) -> torch.Tensor:
         local_ball_position_coordinates = torch.zeros_like(org_ball_position_coordinates)
 
@@ -284,11 +279,11 @@ class TTNet(nn.Module):
             is_ball_detected, x_min, x_max, y_min, y_max, x_pad, y_pad = params
 
             if is_ball_detected:
-                local_ball_position_coordinates[index, 0] = max(
-                    org_ball_position_coordinates[index, 0] - x_min + x_pad, -1
+                local_ball_position_coordinates[index, 0] = torch.max(
+                    org_ball_position_coordinates[index, 0] - x_min + x_pad, torch.tensor(-1)
                 )
-                local_ball_position_coordinates[index, 1] = max(
-                    org_ball_position_coordinates[index, 1] - y_min + y_pad, -1
+                local_ball_position_coordinates[index, 1] = torch.max(
+                    org_ball_position_coordinates[index, 1] - y_min + y_pad, torch.tensor(-1)
                 )
                 if (
                     (local_ball_position_coordinates[index, 0] >= self.resize_width)
