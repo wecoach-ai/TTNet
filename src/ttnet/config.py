@@ -72,6 +72,10 @@ def init_config(params: CLIParams) -> Config:
     if is_distributed and params["multiprocessing"]:
         params["rank"] = params["rank"] * number_gpu_per_node + params["gpu_idx"]
 
+    if is_distributed and params["gpu_idx"] >= 0:
+        params["batch_size"] //= number_gpu_per_node
+        params["num_worker"] = (params["num_worker"] + number_gpu_per_node - 1) // number_gpu_per_node
+
     return Config(
         **params,
         device=device,
