@@ -26,7 +26,7 @@ def model_factory(conf: Config) -> MultiTaskLearning | UnbalanceLoss:
     if conf["multitask_learning"]:
         return MultiTaskLearning(
             base_model,
-            conf["tasks"],
+            len(conf["tasks"]),
             conf["number_events"],
             conf["events_weights_loss"],
             conf["input_frame_size"],
