@@ -6,6 +6,7 @@ import torch.nn.functional as F
 class ConvolutionBlock(nn.Module):
     def __init__(self, in_channels: int, out_channels: int, pooling: bool = True) -> None:
         super().__init__()
+
         self.convolution = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=1, padding=1)
         self.batch_normalization = nn.BatchNorm2d(out_channels)
         self.relu = nn.ReLU()
@@ -26,6 +27,7 @@ class ConvolutionBlock(nn.Module):
 class DeconvolutionBlock(nn.Module):
     def __init__(self, in_channels: int, out_channels: int) -> None:
         super().__init__()
+
         middle_channels = in_channels // 4
 
         self.convolution_block_1 = nn.Conv2d(in_channels, middle_channels, kernel_size=1, stride=1, padding=0)
@@ -48,6 +50,7 @@ class DeconvolutionBlock(nn.Module):
 class BallDetection(nn.Module):
     def __init__(self, number_frame_sequence: int, dropout_probability: float) -> None:
         super().__init__()
+
         self.convolution = nn.Conv2d(number_frame_sequence * 3, 64, kernel_size=1, stride=1, padding=0)
         self.batch_normalization = nn.BatchNorm2d(64)
         self.relu = nn.ReLU()
@@ -91,6 +94,7 @@ class BallDetection(nn.Module):
 class EventsSpotting(nn.Module):
     def __init__(self, dropout_probability: float) -> None:
         super().__init__()
+
         self.convolution_block_1 = nn.Conv2d(512, 64, kernel_size=1, stride=1, padding=0)
         self.batch_normalization = nn.BatchNorm2d(64)
         self.relu = nn.ReLU()
@@ -119,6 +123,7 @@ class EventsSpotting(nn.Module):
 class Segmentation(nn.Module):
     def __init__(self) -> None:
         super().__init__()
+
         self.deconvolution_block_5 = DeconvolutionBlock(256, 128)
         self.deconvolution_block_4 = DeconvolutionBlock(128, 128)
         self.deconvolution_block_3 = DeconvolutionBlock(128, 64)
@@ -163,6 +168,7 @@ class TTNet(nn.Module):
         standard_deviation: tuple[float, float, float] = (0.229, 0.224, 0.225),
     ) -> None:
         super().__init__()
+
         self.ball_global_stage = BallDetection(number_frame_sequence, dropout_probability)
         self.ball_local_stage = BallDetection(number_frame_sequence, dropout_probability) if "local" in tasks else None
         self.events_spotting = EventsSpotting(dropout_probability) if "event" in tasks else None
