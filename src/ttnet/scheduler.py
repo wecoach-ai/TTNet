@@ -4,7 +4,7 @@ import torch
 import torch.utils
 
 from .model.factory import model_factory
-from .model import multitask_learning, unbalance_loss
+from .model.types import TTNetModel
 from .types import Config
 
 
@@ -28,7 +28,7 @@ def trigger_training(conf: Config) -> None:
         writer = torch.utils.tensorboard.SummaryWriter(log_dir=conf["logs_dir"] / "tensorboard")  # type: ignore
 
     try:
-        model: multitask_learning.MultiTaskLearning | unbalance_loss.UnbalanceLoss = model_factory(conf)
+        model: TTNetModel = model_factory(conf)
         logging.info(model)
     except Exception:
         pass
