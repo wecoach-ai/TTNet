@@ -2,8 +2,7 @@ import typing
 
 import torch
 
-from .multitask_learning import MultiTaskLearning
-from .unbalance_loss import UnbalanceLoss
+from .advanced_learning_strategies import MultiTaskLearning, UnbalanceLoss
 
 TTNetSequentialModel: typing.TypeAlias = MultiTaskLearning | UnbalanceLoss
 
