@@ -88,3 +88,9 @@ class Config(CLIParams):
     test_output_dir: pathlib.Path | None
     demo_output_dir: pathlib.Path | None
     distributed: bool
+
+
+TTNetOptimizer: typing.TypeAlias = torch.optim.Adam | torch.optim.SGD
+TTNetLearningRateScheduler: typing.TypeAlias = (
+    torch.optim.lr_scheduler.StepLR | torch.optim.lr_scheduler.ReduceLROnPlateau
+)

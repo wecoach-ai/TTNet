@@ -5,9 +5,8 @@ import torch
 import torch.nn as nn
 
 from ..types import Config
-from .ttnet import TTNet
-from .multitask_learning import MultiTaskLearning
-from .unbalance_loss import UnbalanceLoss
+from .advanced_learning_strategies import MultiTaskLearning, UnbalanceLoss
+from .neural_networks import TTNet
 from .types import TTNetSequentialModel, TTNetParallelModel, TTNetModel
 
 
